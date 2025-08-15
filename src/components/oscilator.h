@@ -2,6 +2,7 @@
 #include <component.h>
 #include <audioConfig.h>
 #include <knob.h>
+#include <drawGraph.h>
 
 struct Oscilator: public Component
 {
@@ -15,10 +16,18 @@ struct Oscilator: public Component
 
 	void render(AssetManager &assetManager)
 	{
+		Rectangle rect = {position.x,position.y,getSize().x, getSize().y};
 
 		DrawTexturePro(assetManager.oscilator,
 			{0,0, (float)assetManager.oscilator.width, (float)assetManager.oscilator.height},
-			{position.x,position.y,getSize().x, getSize().y}, {0,0}, 0, WHITE);
+			rect, {0,0}, 0, WHITE);
+
+		rect.x += rect.width * 0.06;
+		rect.y += rect.height * 0.06;
+		rect.width *= 0.82;
+		rect.height *= 0.5;
+
+		drawSineGraph(rect, getFrequency(), -1, 1);
 
 		frecKnob.render(assetManager, position);
 
@@ -39,11 +48,17 @@ struct Oscilator: public Component
 	constexpr static float lowestNote = 20;
 	constexpr static float highestNote = 2000;
 
+	float getFrequency()
+	{
+		float freq = frecKnob.linearRemapWithBias(inputs[0].input, lowestNote, highestNote);
+		return freq;
+	}
+
 	void audioUpdate()
 	{
 		const float twoPi = 6.283185307179586f;
 
-		float freq = frecKnob.linearRemapWithBias(inputs[0].input, lowestNote, highestNote);
+		float freq = getFrequency();
 		
 
 		// advance phase

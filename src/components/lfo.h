@@ -15,15 +15,24 @@ struct Lfo: public Component
 
 	void render(AssetManager &assetManager)
 	{
+		Rectangle rect = {position.x,position.y,getSize().x, getSize().y};
 
 		DrawTexturePro(assetManager.lfo,
 			{0,0, (float)assetManager.lfo.width, (float)assetManager.lfo.height},
-			{position.x,position.y,getSize().x, getSize().y}, {0,0}, 0, WHITE);
+			rect, {0,0}, 0, WHITE);
 
 		frecKnob.render(assetManager, position);
 
 		minKnob.render(assetManager, position);
 		maxKnob.render(assetManager, position);
+
+		rect.x += rect.width * 0.06;
+		rect.y += rect.height * 0.06;
+		rect.width *= 0.82;
+		rect.height *= 0.5;
+
+		drawSineGraph(rect, getFrequency(), minKnob.value, maxKnob.value);
+
 	}
 
 	float phase = 0.f;
@@ -46,11 +55,17 @@ struct Lfo: public Component
 	constexpr static float lowestNote = 0.01;
 	constexpr static float highestNote = 25;
 
+	float getFrequency()
+	{
+		float freq = frecKnob.linearRemapWithBias(inputs[0].input, lowestNote, highestNote);
+		return freq;
+	}
+
 	void audioUpdate()
 	{
 		const float twoPi = 6.283185307179586f;
 
-		float freq = frecKnob.linearRemapWithBias(inputs[0].input, lowestNote, highestNote);
+		float freq = getFrequency();
 
 		// advance phase
 		phase += freq / sampleRate;
