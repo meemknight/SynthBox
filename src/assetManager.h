@@ -12,6 +12,7 @@ struct AssetManager
 	Texture knob;
 	Texture lfo;
 	Texture volume;
+	Texture splitter;
 
 	void loadAll();
 

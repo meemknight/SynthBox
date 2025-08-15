@@ -4,6 +4,7 @@
 #include <components/plus.h>
 #include <components/lfo.h>
 #include <components/volume.h>
+#include <components/splitter.h>
 
 void AudioRig::init()
 {
@@ -46,6 +47,14 @@ std::uint64_t AudioRig::addVolume(Vector2 position)
 	Volume component;
 	component.position = position;
 	components[idCounter] = std::make_unique<Volume>(component);
+	return idCounter++;
+}
+
+std::uint64_t AudioRig::addSplitter(Vector2 position)
+{
+	Splitter component;
+	component.position = position;
+	components[idCounter] = std::make_unique<Splitter>(component);
 	return idCounter++;
 }
 

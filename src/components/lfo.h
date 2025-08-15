@@ -26,12 +26,13 @@ struct Lfo: public Component
 		minKnob.render(assetManager, position);
 		maxKnob.render(assetManager, position);
 
-		rect.x += rect.width * 0.06;
-		rect.y += rect.height * 0.06;
-		rect.width *= 0.82;
-		rect.height *= 0.5;
+		rect.x += rect.width * 0.085;
+		rect.y += rect.height * 0.080;
+		rect.width *= 0.81;
+		rect.height *= 0.48;
 
-		drawSineGraph(rect, getFrequency(), minKnob.value, maxKnob.value);
+		drawSineGraph(rect, getFrequency(), minKnob.value, maxKnob.value,
+			0, {}, PURPLE);
 
 	}
 

@@ -22,10 +22,10 @@ struct Oscilator: public Component
 			{0,0, (float)assetManager.oscilator.width, (float)assetManager.oscilator.height},
 			rect, {0,0}, 0, WHITE);
 
-		rect.x += rect.width * 0.06;
-		rect.y += rect.height * 0.06;
-		rect.width *= 0.82;
-		rect.height *= 0.5;
+		rect.x += rect.width * 0.085;
+		rect.y += rect.height * 0.080;
+		rect.width *= 0.81;
+		rect.height *= 0.48;
 
 		drawSineGraph(rect, getFrequency(), -1, 1);
 
