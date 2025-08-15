@@ -35,6 +35,8 @@ struct AudioRig
 
 	std::uint64_t addLfo(Vector2 position);
 
+	std::uint64_t addVolume(Vector2 position);
+
 	void addLink(Link link);
 
 	void removeLinkFromOutputNode(std::uint64_t id, int position);

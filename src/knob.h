@@ -11,6 +11,11 @@ struct Knob
 	Knob(Vector2 position, float size, float value):
 		position(position), size(size), value(value) {};
 
+	Knob(Vector2 position, float size, float value, float minValue, float maxValue):
+		position(position), size(size), value(value), minValue(minValue), maxValue(maxValue)
+	{
+	};
+
 	Vector2 position = {};
 
 	float value = 0;

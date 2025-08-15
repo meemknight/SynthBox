@@ -11,6 +11,7 @@ struct AssetManager
 	Texture plus;
 	Texture knob;
 	Texture lfo;
+	Texture volume;
 
 	void loadAll();
 

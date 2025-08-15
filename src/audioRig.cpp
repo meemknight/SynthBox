@@ -3,6 +3,7 @@
 #include <components/oscilator.h>
 #include <components/plus.h>
 #include <components/lfo.h>
+#include <components/volume.h>
 
 void AudioRig::init()
 {
@@ -37,6 +38,14 @@ std::uint64_t AudioRig::addLfo(Vector2 position)
 	Lfo component;
 	component.position = position;
 	components[idCounter] = std::make_unique<Lfo>(component);
+	return idCounter++;
+}
+
+std::uint64_t AudioRig::addVolume(Vector2 position)
+{
+	Volume component;
+	component.position = position;
+	components[idCounter] = std::make_unique<Volume>(component);
 	return idCounter++;
 }
 

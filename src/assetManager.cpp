@@ -10,5 +10,6 @@ void AssetManager::loadAll()
 	plus = LoadTexture(RESOURCES_PATH "plus.png");
 	knob = LoadTexture(RESOURCES_PATH "knob.png");
 	lfo = LoadTexture(RESOURCES_PATH "lfo.png");
+	volume = LoadTexture(RESOURCES_PATH "volume.png");
 
 }

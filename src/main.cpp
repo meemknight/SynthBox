@@ -106,6 +106,7 @@ int main()
 	auto lfo = audioRig.addLfo({-6,0});
 	auto lfo2 = audioRig.addLfo({-6,-2});
 	auto plus = audioRig.addPlus({-1,0});
+	audioRig.addVolume({-1,-2});
 
 	Link link;
 	link.fromComponent = oscilator;
