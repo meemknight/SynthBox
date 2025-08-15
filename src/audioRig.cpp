@@ -1,6 +1,8 @@
 #include "audioRig.h"
 #include <components/speaker.h>
 #include <components/oscilator.h>
+#include <components/plus.h>
+#include <components/lfo.h>
 
 void AudioRig::init()
 {
@@ -14,13 +16,72 @@ void AudioRig::init()
 
 std::uint64_t AudioRig::addOscilator(Vector2 position)
 {
-
 	Oscilator oscilator;
 	oscilator.position = position;
 
 	components[idCounter] = std::make_unique<Oscilator>(oscilator);
 
 	return idCounter++;
+}
+
+std::uint64_t AudioRig::addPlus(Vector2 position)
+{
+	Plus component;
+	component.position = position;
+	components[idCounter] = std::make_unique<Plus>(component);
+	return idCounter++;
+}
+
+std::uint64_t AudioRig::addLfo(Vector2 position)
+{
+	Lfo component;
+	component.position = position;
+	components[idCounter] = std::make_unique<Lfo>(component);
+	return idCounter++;
+}
+
+void AudioRig::addLink(Link link)
+{
+
+	auto fromComponent = components.find(link.fromComponent);
+	auto toComponent = components.find(link.toComponent);
+
+	if (fromComponent == components.end() ||
+		toComponent == components.end()
+		)
+	{
+		return;
+	}
+
+	links.erase(
+		std::remove_if(links.begin(), links.end(),
+		[&](const auto &l)
+		{
+			return (l.fromComponent == link.fromComponent &&
+				l.fromOutputNumber == link.fromOutputNumber)
+				|| (l.toComponent == link.toComponent &&
+				l.toInputNumber == link.toInputNumber);
+		}),
+		links.end());
+
+
+	links.push_back(link);
+
+}
+
+void AudioRig::removeLinkFromOutputNode(std::uint64_t id, int position)
+{
+
+	links.erase(
+		std::remove_if(links.begin(), links.end(),
+		[&](const auto &l)
+		{
+			return (l.fromComponent == id &&
+				l.fromOutputNumber == position);
+		}),
+		links.end());
+
+
 }
 
 

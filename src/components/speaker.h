@@ -2,8 +2,7 @@
 #include <component.h>
 #include <audioConfig.h>
 
-#include <smoothMixer.h>
-#include <deClicker.h>
+#include <knob.h>
 
 //INPUT 0 -> OUTPUT 0
 
@@ -24,12 +23,18 @@ struct Speaker: public Component
 			{0,0, (float)assetManager.speaker.width, (float)assetManager.speaker.height},
 			{position.x,position.y,getSize().x, getSize().y}, {0,0}, 0, WHITE);
 
+		knob.render(assetManager, position);
+
 	}
 
-	
-	//SmoothMixer mixer{(int)sampleRate};
-	//DeClicker deClicker;
+	Knob knob{{0.5, 0.5}, 0.44};
 
+	void uiUpdate(Vector2 mousePos)
+	{
+
+		knob.update(mousePos, position);
+
+	}
 
 	void audioUpdate()
 	{
@@ -42,6 +47,8 @@ struct Speaker: public Component
 			float rez = inputs[0].input;
 			
 			//volume
+			rez *= knob.linearRemap(0, 1);
+			
 			outputs[0].output = rez;
 		}
 

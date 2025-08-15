@@ -12,7 +12,7 @@ struct SmoothMixer
 	float agcAttackMs = 5.0f;    // fast when getting louder (more notes)
 	float agcReleaseMs = 300.0f;  // slow when getting quieter (avoid jumps)
 	float maxGain = 8.0f;    // AGC gain limits
-	float minGain = 0.125f;
+	float minGain = 0.005f;
 
 	float lookaheadMs = 1.0f;    // limiter lookahead time
 	float ceiling = 0.98f;   // limiter peak ceiling

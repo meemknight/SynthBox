@@ -19,16 +19,21 @@
 #include "components/speaker.h"
 #include <audioConfig.h>
 #include <audioRig.h>
+#include <mutex>
 
 std::atomic<bool> gHeldQ{false};
 
 Camera2D camera;
 AssetManager assetManager;
 AudioRig audioRig;
+std::mutex mainAudioMutex;
 
 
 void MyAudioCB(void *bufferData, unsigned int frames)
 {
+
+	mainAudioMutex.lock();
+
 	// stream format: 16-bit mono
 	int16_t *out = (int16_t *)bufferData;
 
@@ -56,6 +61,8 @@ void MyAudioCB(void *bufferData, unsigned int frames)
 		int vi = (int)lrintf(clamped * 32767.0f);
 		out[i] = (int16_t)std::max(-32768, std::min(32767, vi));
 	}
+
+	mainAudioMutex.unlock();
 
 }
 
@@ -94,14 +101,25 @@ int main()
 
 	audioRig.init();
 
-	auto oscilator = audioRig.addOscilator({-2,0});
+	auto oscilator = audioRig.addOscilator({-3,0});
+	auto oscilator2 = audioRig.addOscilator({-3,-2});
+	auto lfo = audioRig.addLfo({-6,0});
+	auto plus = audioRig.addPlus({-1,0});
 
 	Link link;
 	link.fromComponent = oscilator;
 	link.fromOutputNumber = 0;
-	link.toComponent = audioRig.SPEAKER_ID;
+	link.toComponent = plus;
 	link.toInputNumber  = 0;
 	audioRig.links.push_back(link);
+
+	link.fromComponent = plus;
+	link.fromOutputNumber = 0;
+	link.toComponent = audioRig.SPEAKER_ID;
+	link.toInputNumber = 0;
+	audioRig.links.push_back(link);
+
+
 
 
 #pragma endregion
@@ -130,7 +148,7 @@ int main()
 
 	camera.target = {0,0};
 	camera.rotation = 0;
-	camera.zoom = 140;
+	camera.zoom = 180;
 
 
 #pragma endregion
@@ -150,7 +168,16 @@ int main()
 		BeginDrawing();
 		ClearBackground(GRAY);
 
+		Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
 
+		for (auto &c : audioRig.components)
+		{
+			c.second->uiUpdate(mousePos);
+		}
+
+		float inputOutputSize = 0.15;
+
+	
 
 		BeginMode2D(camera);
 		{
@@ -167,7 +194,10 @@ int main()
 					input->x += c.second->position.x;
 					input->y += c.second->position.y;
 
-					drawCircle(*input, 0.15, {0, 228, 48, 155});
+					if (CheckCollisionPointCircle(mousePos, *input, inputOutputSize))
+					{
+						drawCircle(*input, inputOutputSize, {0, 228, 48, 155});
+					}
 				}
 
 				for (int index = 0; index < MAX_OUTPUTS; index++)
@@ -177,11 +207,135 @@ int main()
 
 					output->x += c.second->position.x;
 					output->y += c.second->position.y;
-
-					drawCircle(*output, 0.15, {251, 241, 191, 155});
+					
+					if (CheckCollisionPointCircle(mousePos, *output, inputOutputSize))
+					{
+						drawCircle(*output, inputOutputSize, {251, 241, 191, 155});
+					}
 				}
 
 			}
+
+			for (auto &l : audioRig.links)
+			{
+				auto fromComponent = audioRig.components.find(l.fromComponent);
+				auto toComponent = audioRig.components.find(l.toComponent);
+
+				if (fromComponent != audioRig.components.end() &&
+					toComponent != audioRig.components.end()
+					)
+				{
+					auto from = fromComponent->second->getOutputPosition(l.fromOutputNumber);
+					auto to = toComponent->second->getInputPosition(l.toInputNumber);
+
+					if (from != std::nullopt && to != std::nullopt)
+					{
+						
+						from->x += fromComponent->second->position.x;
+						from->y += fromComponent->second->position.y;
+
+						to->x += toComponent->second->position.x;
+						to->y += toComponent->second->position.y;
+
+						DrawLineEx(*from, *to, 0.1, {0, 117, 44, 105});
+
+					}
+
+				}
+
+			}
+
+		#pragma region add and remove connectons
+			{
+				static bool pressed = 0;
+				static std::uint64_t fromID = 0;
+				static int fromIndex = 0;
+
+				if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+				{
+
+					for (auto &c : audioRig.components)
+					{
+						for (int index = 0; index < MAX_OUTPUTS; index++)
+						{
+							auto output = c.second->getOutputPosition(index);
+							if (output == std::nullopt) { break; }
+							output->x += c.second->position.x;
+							output->y += c.second->position.y;
+
+							if (CheckCollisionPointCircle(mousePos, *output, inputOutputSize))
+							{
+								pressed = true;
+								fromID = c.first;
+								fromIndex = index;
+								break;
+							}
+
+						}
+
+						if (pressed) { break; }
+
+					}
+
+				}
+
+				if (pressed && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+				{
+					bool addedConnection = false;
+
+					for (auto &c : audioRig.components)
+					{
+						for (int index = 0; index < MAX_INPUTS; index++)
+						{
+							auto input = c.second->getInputPosition(index);
+							if (input == std::nullopt) { break; }
+							input->x += c.second->position.x;
+							input->y += c.second->position.y;
+
+							if (CheckCollisionPointCircle(mousePos, *input, inputOutputSize))
+							{
+								//add connection todo
+								addedConnection = true;
+
+								Link link;
+								link.fromComponent = fromID;
+								link.toComponent = c.first;
+								link.fromOutputNumber = fromIndex;
+								link.toInputNumber = index;
+
+								mainAudioMutex.lock();
+								audioRig.addLink(link);
+								mainAudioMutex.unlock();
+
+								break;
+							}
+
+						}
+
+						if (addedConnection) { break; }
+
+					}
+
+					if (!addedConnection)
+					{
+						mainAudioMutex.lock();
+						audioRig.removeLinkFromOutputNode(fromID, fromIndex);
+						mainAudioMutex.unlock();
+					}
+
+				}
+
+				if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+				{
+					pressed = 0;
+					fromID = 0;
+					fromIndex = 0;
+				}
+
+
+			}
+		#pragma endregion
+
 
 		}
 		EndMode2D();

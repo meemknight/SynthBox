@@ -44,6 +44,8 @@ struct Component
 
 	virtual void audioUpdate() = 0;
 
+	virtual void uiUpdate(Vector2 mousePos) {};
+
 	virtual std::optional<Vector2> getInputPosition(int index) = 0;
 	virtual std::optional<Vector2> getOutputPosition(int index) = 0;
 

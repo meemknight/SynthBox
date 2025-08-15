@@ -3,7 +3,7 @@
 #include <audioConfig.h>
 #include <knob.h>
 
-struct Oscilator: public Component
+struct Lfo: public Component
 {
 
 
@@ -16,12 +16,14 @@ struct Oscilator: public Component
 	void render(AssetManager &assetManager)
 	{
 
-		DrawTexturePro(assetManager.oscilator,
-			{0,0, (float)assetManager.oscilator.width, (float)assetManager.oscilator.height},
+		DrawTexturePro(assetManager.lfo,
+			{0,0, (float)assetManager.lfo.width, (float)assetManager.lfo.height},
 			{position.x,position.y,getSize().x, getSize().y}, {0,0}, 0, WHITE);
 
 		frecKnob.render(assetManager, position);
 
+		minKnob.render(assetManager, position);
+		maxKnob.render(assetManager, position);
 	}
 
 	float phase = 0.f;
@@ -29,28 +31,33 @@ struct Oscilator: public Component
 
 	Knob frecKnob{Vector2{0.68,1.43}, 0.44};
 
+	Knob minKnob{Vector2{1.08,1.45}, 0.24, -1};
+	Knob maxKnob{Vector2{1.34,1.45}, 0.24,  1};
+
 	void uiUpdate(Vector2 mousePos)
 	{
 
 		frecKnob.update(mousePos, position);
+		minKnob.update(mousePos, position);
+		maxKnob.update(mousePos, position);
 
 	}
 
-	constexpr static float lowestNote = 20;
-	constexpr static float highestNote = 2000;
+	constexpr static float lowestNote = 0.01;
+	constexpr static float highestNote = 25;
 
 	void audioUpdate()
 	{
 		const float twoPi = 6.283185307179586f;
 
 		float freq = frecKnob.linearRemapWithBias(inputs[0].input, lowestNote, highestNote);
-		
 
 		// advance phase
 		phase += freq / sampleRate;
 		if (phase >= 1.0f) phase -= 1.0f;
 
-		outputs[0].output = sinf(twoPi * phase);
+		outputs[0].output = linearRemap(sinf(twoPi * phase), 
+			-1, 1, minKnob.value, maxKnob.value);
 	}
 
 	std::optional<Vector2> getInputPosition(int index)
