@@ -1,3 +1,5 @@
+#pragma once
+
 // Zero-latency post de-clicker (slew limiter)
 struct DeClicker
 {

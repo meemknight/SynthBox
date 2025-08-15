@@ -38,7 +38,7 @@ struct Speaker: public Component
 		}
 		else
 		{
-			float rez = input.thisFrame;
+			float rez = input.input;
 			
 			//volume
 			output.output = rez;

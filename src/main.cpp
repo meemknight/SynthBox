@@ -18,15 +18,13 @@
 #include "components/oscilator.h"
 #include "components/speaker.h"
 #include <audioConfig.h>
+#include <audioRig.h>
 
 std::atomic<bool> gHeldQ{false};
 
-SmoothMixer mixer(sampleRate);
-DeClicker deClicker;
 Camera2D camera;
-Oscilator oscilator;
-Speaker speaker;
 AssetManager assetManager;
+AudioRig audioRig;
 
 
 void MyAudioCB(void *bufferData, unsigned int frames)
@@ -50,51 +48,11 @@ void MyAudioCB(void *bufferData, unsigned int frames)
 
 	bool held = gHeldQ.load(std::memory_order_relaxed);
 
-	static float mix[bufferFrames];
+	audioRig.simulate(frames);
 
 	for (unsigned int i = 0; i < frames; ++i)
 	{
-
-		//if (held)
-		//{
-		//	// advance phase
-		//	phase += freq / sampleRate;
-		//	if (phase >= 1.0f) phase -= 1.0f;
-		//
-		//	phaseC += freqC / sampleRate; if (phaseC >= 1.0f) phaseC -= 1.0f;
-		//	phaseE += freqE / sampleRate; if (phaseE >= 1.0f) phaseE -= 1.0f;
-		//	phaseG += freqG / sampleRate; if (phaseG >= 1.0f) phaseG -= 1.0f;
-		//
-		//	mix[i] = sinf(twoPi * phase) * 0.5f;
-		//
-		//	mix[i] = (sinf(twoPi * phaseC) +
-		//		sinf(twoPi * phaseE) +
-		//		sinf(twoPi * phaseG)) * 0.5f;
-		//
-		//}
-		//else
-		//{
-		//	mix[i] = 0;
-		//}
-
-		oscilator.audioUpdate();
-
-		speaker.input.pluggedIn = true;
-		speaker.input.thisFrame = oscilator.output.output;
-
-		speaker.audioUpdate();
-
-		mix[i] = speaker.output.output;
-		
-		
-	}
-
-	mixer.process(mix, frames);
-	deClicker.process(mix, frames);
-
-	for (unsigned int i = 0; i < frames; ++i)
-	{
-		float clamped = std::max(-1.0f, std::min(1.0f, mix[i]));
+		float clamped = std::max(-1.0f, std::min(1.0f, audioRig.resultMix[i]));
 		int vi = (int)lrintf(clamped * 32767.0f);
 		out[i] = (int16_t)std::max(-32768, std::min(32767, vi));
 	}
@@ -117,8 +75,24 @@ int main()
 	io.FontGlobalScale = 2;
 #pragma endregion
 
+
+#pragma region setup audio rig
+
+	audioRig.init();
+
+	auto oscilator = audioRig.addOscilator({-2,0});
+
+	Link link;
+	link.fromComponent = oscilator;
+	link.toComponent = audioRig.SPEAKER_ID;
+	audioRig.links.push_back(link);
+
+
+#pragma endregion
+
+
+#pragma region audio stuff
 	// Audio
-	mixer.setLookaheadMs(1);
 	const int sampleSize = 16;
 	const int channels = 1;
 	SetAudioStreamBufferSizeDefault(bufferFrames);
@@ -131,6 +105,7 @@ int main()
 	PlayAudioStream(stream);
 	SetAudioStreamVolume(stream, 0.7f);
 	SetTargetFPS(120);
+#pragma endregion
 
 
 #pragma region init game
@@ -141,8 +116,6 @@ int main()
 	camera.rotation = 0;
 	camera.zoom = 100;
 
-	oscilator.position.x = -2;
-	speaker.position.x = 0;
 
 #pragma endregion
 
@@ -166,8 +139,10 @@ int main()
 		BeginMode2D(camera);
 		{
 
-			oscilator.render(assetManager);
-			speaker.render(assetManager);
+			for (auto &c : audioRig.components)
+			{
+				c.second->render(assetManager);
+			}
 
 		}
 		EndMode2D();

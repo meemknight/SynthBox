@@ -1,13 +1,12 @@
 #pragma once
 #include <raylib.h>
 #include "assetManager.h"
-
+#include <cstdint>
 
 struct Input
 {
 
-	float thisFrame = 0;
-	float lastFrame = 0;
+	float input = 0;
 	bool pluggedIn = 0;
 
 };
@@ -15,6 +14,15 @@ struct Input
 struct Output
 {
 	float output = 0;
+};
+
+struct Link
+{
+	std::uint64_t fromComponent = 0;
+	std::uint64_t toComponent = 0;
+
+	int fromOutputNumber = 0;
+	int toOutputNumber = 0;
 };
 
 
@@ -34,3 +42,4 @@ struct Component
 	virtual void audioUpdate() = 0;
 
 };
+
