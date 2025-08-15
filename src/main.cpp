@@ -14,15 +14,20 @@
 #pragma endregion
 
 #include "windowsStuff.h"
-#include "smoothMixer.h"
-#include "deClicker.h"
-
+#include "component.h"
+#include "components/oscilator.h"
+#include "components/speaker.h"
+#include <audioConfig.h>
 
 std::atomic<bool> gHeldQ{false};
-const float sampleRate = 32000;  //44100
-const int bufferFrames = 160;
+
 SmoothMixer mixer(sampleRate);
 DeClicker deClicker;
+Camera2D camera;
+Oscilator oscilator;
+Speaker speaker;
+AssetManager assetManager;
+
 
 void MyAudioCB(void *bufferData, unsigned int frames)
 {
@@ -50,27 +55,36 @@ void MyAudioCB(void *bufferData, unsigned int frames)
 	for (unsigned int i = 0; i < frames; ++i)
 	{
 
-		if (held)
-		{
-			// advance phase
-			phase += freq / sampleRate;
-			if (phase >= 1.0f) phase -= 1.0f;
+		//if (held)
+		//{
+		//	// advance phase
+		//	phase += freq / sampleRate;
+		//	if (phase >= 1.0f) phase -= 1.0f;
+		//
+		//	phaseC += freqC / sampleRate; if (phaseC >= 1.0f) phaseC -= 1.0f;
+		//	phaseE += freqE / sampleRate; if (phaseE >= 1.0f) phaseE -= 1.0f;
+		//	phaseG += freqG / sampleRate; if (phaseG >= 1.0f) phaseG -= 1.0f;
+		//
+		//	mix[i] = sinf(twoPi * phase) * 0.5f;
+		//
+		//	mix[i] = (sinf(twoPi * phaseC) +
+		//		sinf(twoPi * phaseE) +
+		//		sinf(twoPi * phaseG)) * 0.5f;
+		//
+		//}
+		//else
+		//{
+		//	mix[i] = 0;
+		//}
 
-			phaseC += freqC / sampleRate; if (phaseC >= 1.0f) phaseC -= 1.0f;
-			phaseE += freqE / sampleRate; if (phaseE >= 1.0f) phaseE -= 1.0f;
-			phaseG += freqG / sampleRate; if (phaseG >= 1.0f) phaseG -= 1.0f;
+		oscilator.audioUpdate();
 
-			mix[i] = sinf(twoPi * phase) * 0.5f;
+		speaker.input.pluggedIn = true;
+		speaker.input.thisFrame = oscilator.output.output;
 
-			mix[i] = (sinf(twoPi * phaseC) +
-				sinf(twoPi * phaseE) +
-				sinf(twoPi * phaseG)) * 0.5f;
+		speaker.audioUpdate();
 
-		}
-		else
-		{
-			mix[i] = 0;
-		}
+		mix[i] = speaker.output.output;
 		
 		
 	}
@@ -98,8 +112,8 @@ int main()
 	rlImGuiSetup(true);
 	imguiThemes::green();
 	ImGuiIO &io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.FontGlobalScale = 2;
 #pragma endregion
 
@@ -119,21 +133,53 @@ int main()
 	SetTargetFPS(120);
 
 
+#pragma region init game
+	
+	assetManager.loadAll();
+
+	camera.target = {0,0};
+	camera.rotation = 0;
+	camera.zoom = 100;
+
+	oscilator.position.x = -2;
+	speaker.position.x = 0;
+
+#pragma endregion
+
+
+
 	while (!WindowShouldClose())
 	{
+
+		camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+
+
 		// update control atomics (no audio work here)
 		gHeldQ.store(IsKeyDown(KEY_Q), std::memory_order_relaxed);
 
 		// UI
 		BeginDrawing();
-		ClearBackground(RAYWHITE);
-		rlImGuiBegin();
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+		ClearBackground(GRAY);
 
-		ImGui::Begin("Synth");
-		ImGui::Text("Hold Q to play (callback)");
-		ImGui::Text("SR: %d  BufferFrames: %d", sampleRate, bufferFrames);
-		ImGui::End();
+
+
+		BeginMode2D(camera);
+		{
+
+			oscilator.render(assetManager);
+			speaker.render(assetManager);
+
+		}
+		EndMode2D();
+
+
+		rlImGuiBegin();
+		//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+		//ImGui::Begin("Synth");
+		//ImGui::Text("Hold Q to play (callback)");
+		//ImGui::Text("SR: %f  BufferFrames: %d", sampleRate, bufferFrames);
+		//ImGui::End();
 
 		rlImGuiEnd();
 		EndDrawing();
