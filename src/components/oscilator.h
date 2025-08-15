@@ -34,7 +34,28 @@ struct Oscilator: public Component
 		phase += freq / sampleRate;
 		if (phase >= 1.0f) phase -= 1.0f;
 
-		output.output = sinf(twoPi * phase) * 0.5f;
+		outputs[0].output = sinf(twoPi * phase) * 0.5f;
+	}
+
+	std::optional<Vector2> getInputPosition(int index)
+	{
+		if (index == 0)
+		{
+			return Vector2{0.28,1.45};
+		}
+
+		return {};
+	}
+
+
+	std::optional<Vector2> getOutputPosition(int index)
+	{
+		if (index == 0)
+		{
+			return Vector2{1.68,1.45};
+		}
+
+		return {};
 	}
 		
 		

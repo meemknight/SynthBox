@@ -59,6 +59,20 @@ void MyAudioCB(void *bufferData, unsigned int frames)
 
 }
 
+void drawCircle(Vector2 center, float r, Color color)
+{
+
+	Rectangle d;
+	d.width = r * 2;
+	d.height = r * 2;
+	d.x = center.x - r;
+	d.y = center.y - r;
+
+	DrawTexturePro(assetManager.circle, {0,0,(float)assetManager.circle.width,(float)assetManager.circle.height},
+		d, {}, 0, color);
+
+}
+
 int main()
 {
 	enableTimeBeginPeriod();
@@ -84,7 +98,9 @@ int main()
 
 	Link link;
 	link.fromComponent = oscilator;
+	link.fromOutputNumber = 0;
 	link.toComponent = audioRig.SPEAKER_ID;
+	link.toInputNumber  = 0;
 	audioRig.links.push_back(link);
 
 
@@ -114,7 +130,7 @@ int main()
 
 	camera.target = {0,0};
 	camera.rotation = 0;
-	camera.zoom = 100;
+	camera.zoom = 140;
 
 
 #pragma endregion
@@ -142,6 +158,29 @@ int main()
 			for (auto &c : audioRig.components)
 			{
 				c.second->render(assetManager);
+
+				for (int index = 0; index < MAX_INPUTS; index++)
+				{
+					auto input = c.second->getInputPosition(index);
+					if (input == std::nullopt) { break; }
+
+					input->x += c.second->position.x;
+					input->y += c.second->position.y;
+
+					drawCircle(*input, 0.15, {0, 228, 48, 155});
+				}
+
+				for (int index = 0; index < MAX_OUTPUTS; index++)
+				{
+					auto output = c.second->getOutputPosition(index);
+					if (output == std::nullopt) { break; }
+
+					output->x += c.second->position.x;
+					output->y += c.second->position.y;
+
+					drawCircle(*output, 0.15, {251, 241, 191, 155});
+				}
+
 			}
 
 		}

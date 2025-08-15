@@ -30,18 +30,27 @@ void AudioRig::simulate(int frames)
 	//pre step check plugged in stuff
 	for (auto &c : components)
 	{
-		c.second->input.pluggedIn = false;
 
-		for (auto &l : links)
+		for (int index = 0; index < MAX_INPUTS; index++)
 		{
 
-			if (l.toComponent == c.first)
+			if (c.second->getInputPosition(index) == std::nullopt) { break; }
+
+			c.second->inputs[index].pluggedIn = false;
+
+			for (auto &l : links)
 			{
-				//todo also jack id
-				c.second->input.pluggedIn = true;
-				break;
+
+				if (l.toComponent == c.first && l.toInputNumber == index)
+				{
+					c.second->inputs[index].pluggedIn = true;
+					break;
+				}
 			}
+
 		}
+
+
 	}
 
 
@@ -54,7 +63,11 @@ void AudioRig::simulate(int frames)
 			c.second->audioUpdate();
 
 			//reset the input
-			c.second->input.input = 0;
+			for (int index = 0; index < MAX_INPUTS; index++)
+			{
+				if (c.second->getInputPosition(index) == std::nullopt) { break; }
+				c.second->inputs[index].input = 0;
+			}
 		}
 
 		//step 2 move the audio to the next component
@@ -72,12 +85,12 @@ void AudioRig::simulate(int frames)
 				continue;
 			}
 
-			toComponent->second->input.input = fromComponent->second->output.output;
+			toComponent->second->inputs[l.toInputNumber].input = fromComponent->second->outputs[l.fromOutputNumber].output;
 
 		}
 
 		//step 3 get the result in the buffer
-		resultMix[i] = components[SPEAKER_ID]->output.output;
+		resultMix[i] = components[SPEAKER_ID]->outputs[0].output;
 	}
 
 	mixer.process(resultMix, frames);

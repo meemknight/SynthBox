@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include "assetManager.h"
 #include <cstdint>
+#include <optional>	
 
 struct Input
 {
@@ -22,16 +23,18 @@ struct Link
 	std::uint64_t toComponent = 0;
 
 	int fromOutputNumber = 0;
-	int toOutputNumber = 0;
+	int toInputNumber = 0;
 };
+
+constexpr static int MAX_INPUTS = 8;
+constexpr static int MAX_OUTPUTS = 8;
 
 
 struct Component
 {
 
-	Input input;
-	Output output;
-
+	Input inputs[MAX_INPUTS];
+	Output outputs[MAX_OUTPUTS];
 
 	Vector2 position = {0,0};
 
@@ -40,6 +43,9 @@ struct Component
 	virtual void render(AssetManager &assetManager) = 0;
 
 	virtual void audioUpdate() = 0;
+
+	virtual std::optional<Vector2> getInputPosition(int index) = 0;
+	virtual std::optional<Vector2> getOutputPosition(int index) = 0;
 
 };
 

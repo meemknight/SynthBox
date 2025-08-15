@@ -6,6 +6,7 @@ void AssetManager::loadAll()
 
 	oscilator = LoadTexture(RESOURCES_PATH "oscilator.png");
 	speaker = LoadTexture(RESOURCES_PATH "speaker.png");
+	circle = LoadTexture(RESOURCES_PATH "circle.png");
 
 
 

@@ -5,6 +5,7 @@
 #include <smoothMixer.h>
 #include <deClicker.h>
 
+//INPUT 0 -> OUTPUT 0
 
 struct Speaker: public Component
 {
@@ -32,16 +33,16 @@ struct Speaker: public Component
 
 	void audioUpdate()
 	{
-		if (!input.pluggedIn)
+		if (!inputs[0].pluggedIn)
 		{
-			output.output = 0;
+			outputs[0].output = 0;
 		}
 		else
 		{
-			float rez = input.input;
+			float rez = inputs[0].input;
 			
 			//volume
-			output.output = rez;
+			outputs[0].output = rez;
 		}
 
 
@@ -49,10 +50,23 @@ struct Speaker: public Component
 		//mixer.process(&output.output, 1);
 		//deClicker.process(&output.output, 1);
 
+	}
 
+	std::optional<Vector2> getInputPosition(int index)
+	{
+		if (index == 0)
+		{
+			return Vector2{0.5,1.48};
+		}
+
+		return {};
 	}
 
 
+	std::optional<Vector2> getOutputPosition(int index)
+	{
+		return {};
+	}
 
 
 };
