@@ -3,6 +3,7 @@
 #include <audioConfig.h>
 #include <knob.h>
 #include <drawGraph.h>
+#include <basicOscilator.h>
 
 struct Oscilator: public Component
 {
@@ -13,6 +14,17 @@ struct Oscilator: public Component
 		return Vector2{2,2};
 	}
 
+	BasicOscilator oscilator;
+
+	Rectangle getScreenRect()
+	{
+		Rectangle rect = {position.x,position.y,getSize().x, getSize().y};
+		rect.x += rect.width * 0.115;
+		rect.y += rect.height * 0.115;
+		rect.width *= 0.75;
+		rect.height *= 0.42;
+		return rect;
+	}
 
 	void render(AssetManager &assetManager)
 	{
@@ -22,18 +34,15 @@ struct Oscilator: public Component
 			{0,0, (float)assetManager.oscilator.width, (float)assetManager.oscilator.height},
 			rect, {0,0}, 0, WHITE);
 
-		rect.x += rect.width * 0.085;
-		rect.y += rect.height * 0.080;
-		rect.width *= 0.81;
-		rect.height *= 0.48;
+		rect = getScreenRect();
 
-		drawSineGraph(rect, getFrequency(), -1, 1);
+		drawSineGraph(rect, getFrequency(), -1, 1, 0, {}, GREEN, 0.02, oscilator.type);
 
 		frecKnob.render(assetManager, position);
 
 	}
 
-	float phase = 0.f;
+
 	//float freq = 261.6256f; // C4
 
 	Knob frecKnob{Vector2{0.68,1.43}, 0.44};
@@ -42,6 +51,13 @@ struct Oscilator: public Component
 	{
 
 		frecKnob.update(mousePos, position);
+
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && 
+			CheckCollisionPointRec(mousePos, getScreenRect()))
+		{
+			oscilator.cycleNextVersion();
+
+		}
 
 	}
 
@@ -56,16 +72,9 @@ struct Oscilator: public Component
 
 	void audioUpdate()
 	{
-		const float twoPi = 6.283185307179586f;
-
 		float freq = getFrequency();
 		
-
-		// advance phase
-		phase += freq / sampleRate;
-		if (phase >= 1.0f) phase -= 1.0f;
-
-		outputs[0].output = sinf(twoPi * phase);
+		outputs[0].output = oscilator.update(freq);
 	}
 
 	std::optional<Vector2> getInputPosition(int index)

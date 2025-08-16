@@ -1,70 +1,87 @@
 #include "raylib.h"
 #include <cmath>
 #include <algorithm>
+#include "drawGraph.h"
 
 static inline float clampf(float x, float a, float b) { return x < a ? a : (x > b ? b : x); }
 
 void drawSineGraph(Rectangle rect, float frequency, float minVal, float maxVal,
-	float phase, Color bg, Color wave, float thicknessPx)
+    float phase, Color bg, Color wave, float thicknessPx, int waveType)
 {
-	if (rect.width <= 0.0f || rect.height <= 0.0f) return;
+    if (rect.width <= 0.0f || rect.height <= 0.0f) return;
 
-	// Background (world space)
-	DrawRectangleRec(rect, bg);
-	//BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
+    DrawRectangleRec(rect, bg);
 
-	// Ensure valid range
-	if (minVal == maxVal) maxVal = minVal + 0.000001f;
-	if (minVal > maxVal) std::swap(minVal, maxVal);
-	const float range = maxVal - minVal;
+    if (minVal == maxVal) maxVal = minVal + 0.000001f;
+    if (minVal > maxVal) std::swap(minVal, maxVal);
+    const float range = maxVal - minVal;
 
-	// Visual frequency compression (keeps ultra-high freqs visible but sane)
-	float cycles = std::pow(frequency, 0.25);
-	const float minCycles = 0.1f;
-	const float softCap = 20.0f;
-	if (cycles < minCycles) cycles = minCycles;
-	if (cycles > softCap)   cycles = softCap + logf(1.0f + (cycles - softCap));
+    float cycles = std::pow(frequency, 0.25f);
+    const float minCycles = 0.1f;
+    const float softCap = 20.0f;
+    if (cycles < minCycles) cycles = minCycles;
+    if (cycles > softCap)   cycles = softCap + logf(1.0f + (cycles - softCap));
 
-	// Adaptive segment count:
-	// - decoupled from screen pixels, works for tiny rects in world units
-	// - scale with rect width and with cycles to avoid under-sampling
-	const float baseDensityPerUnit = 64.0f;          // segments per world-unit width
-	int segments = (int)std::ceilf(std::max(rect.width, 0.25f) * baseDensityPerUnit
-		+ cycles * 24.0f);
-	if (segments < 32) { segments = 32; }
-	if (segments > 16384) { segments = 16384; }
-	
-	const float twoPi = 6.283185307179586f;
+    const float baseDensityPerUnit = 64.0f;
+    int segments = (int)std::ceilf(std::max(rect.width, 0.25f) * baseDensityPerUnit
+        + cycles * 24.0f);
+    if (segments < 32) { segments = 32; }
+    if (segments > 16384) { segments = 16384; }
 
-	auto evalY = [&](float t01)
-	{
-		float s = sinf(twoPi * (t01 * cycles) + phase);          // [-1,1]
-		float v = minVal + (s + 1.0f) * 0.5f * range;            // remap to [minVal,maxVal]
-		//v = clampf(v, minVal, maxVal);                         // clamp for drawing
-		float y = rect.y + rect.height - ((v + 1) / 2) * rect.height;
-		return y;
+    const float twoPi = 6.283185307179586f;
+    const float invTwoPi = 1.0f / twoPi;
+    const float pulseWidth = 0.5f; // square duty (0.5 = square)
 
-	};
+    auto evalY = [&](float t01)
+    {
+        // phaseArg in radians, and fractional phase p in [0,1)
+        float phaseArg = twoPi * (t01 * cycles) + phase;
+        float p = phaseArg * invTwoPi;      // cycles + phase (in cycles)
+        p = p - floorf(p);                  // frac
 
-	float xPrev = rect.x;
-	float yPrev = evalY(0.0f);
+        float s = 0.0f;                     // waveform in [-1,1]
+        switch (waveType)
+        {
+            default: // fallthrough to sine
+            case sineWave: // sine
+                s = sinf(phaseArg);
+                break;
 
-	const float thick = (thicknessPx > 0.0f) ? thicknessPx : 1.0f;
+            case sawToothWave: // saw (naive, bipolar)
+                s = 2.0f * p - 1.0f;
+                break;
 
-	for (int i = 1; i <= segments; ++i)
-	{
-		float t = (float)i / (float)segments;                    // [0,1] across rect
-		float x = rect.x + t * rect.width;
-		float y = evalY(t);
+            case triangleWave: // triangle (from folded saw), bipolar
+            {
+                float saw = 2.0f * p - 1.0f;             // -1..+1
+                s = 2.0f * (1.0f - fabsf(saw)) - 1.0f;   // -1..+1
+            } break;
 
-		// Keep strictly inside rect horizontally (guards against tiny FP drift)
-		if (x > rect.x + rect.width) x = rect.x + rect.width;
+            case squareWave: // square / pulse (bipolar)
+                s = (p < pulseWidth) ? 1.0f : -1.0f;
+                break;
+        }
 
-		DrawLineEx(Vector2{xPrev, yPrev}, Vector2{x, y}, thick, wave);
+        // map from [-1,1] -> [minVal,maxVal]
+        float v = minVal + (s + 1.0f) * 0.5f * range;
 
-		xPrev = x;
-		yPrev = y;
-	}
+        // draw-space Y (kept exactly like your original math)
+        float y = rect.y + rect.height - ((v + 1) / 2) * rect.height;
+        return y;
+    };
 
-	//EndScissorMode();
+    float xPrev = rect.x;
+    float yPrev = evalY(0.0f);
+    const float thick = (thicknessPx > 0.0f) ? thicknessPx : 1.0f;
+
+    for (int i = 1; i <= segments; ++i)
+    {
+        float t = (float)i / (float)segments;
+        float x = rect.x + t * rect.width;
+        float y = evalY(t);
+        if (x > rect.x + rect.width) x = rect.x + rect.width;
+        DrawLineEx(Vector2{ xPrev, yPrev }, Vector2{ x, y }, thick, wave);
+        xPrev = x;
+        yPrev = y;
+    }
 }

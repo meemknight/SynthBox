@@ -2,6 +2,7 @@
 #include <component.h>
 #include <audioConfig.h>
 #include <knob.h>
+#include <basicOscilator.h>
 
 struct Lfo: public Component
 {
@@ -12,6 +13,17 @@ struct Lfo: public Component
 		return Vector2{2,2};
 	}
 
+	BasicOscilator oscilator;
+
+	Rectangle getScreenRect()
+	{
+		Rectangle rect = {position.x,position.y,getSize().x, getSize().y};
+		rect.x += rect.width * 0.115;
+		rect.y += rect.height * 0.115;
+		rect.width *= 0.75;
+		rect.height *= 0.42;
+		return rect;
+	}
 
 	void render(AssetManager &assetManager)
 	{
@@ -26,13 +38,10 @@ struct Lfo: public Component
 		minKnob.render(assetManager, position);
 		maxKnob.render(assetManager, position);
 
-		rect.x += rect.width * 0.085;
-		rect.y += rect.height * 0.080;
-		rect.width *= 0.81;
-		rect.height *= 0.48;
+		rect = getScreenRect();
 
 		drawSineGraph(rect, getFrequency(), minKnob.value, maxKnob.value,
-			0, {}, PURPLE);
+			0, {}, PURPLE, 0.02, oscilator.type);
 
 	}
 
@@ -51,6 +60,12 @@ struct Lfo: public Component
 		minKnob.update(mousePos, position);
 		maxKnob.update(mousePos, position);
 
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+			CheckCollisionPointRec(mousePos, getScreenRect()))
+		{
+			oscilator.cycleNextVersion();
+
+		}
 	}
 
 	constexpr static float lowestNote = 0.01;
@@ -64,16 +79,9 @@ struct Lfo: public Component
 
 	void audioUpdate()
 	{
-		const float twoPi = 6.283185307179586f;
-
 		float freq = getFrequency();
 
-		// advance phase
-		phase += freq / sampleRate;
-		if (phase >= 1.0f) phase -= 1.0f;
-
-		outputs[0].output = linearRemap(sinf(twoPi * phase), 
-			-1, 1, minKnob.value, maxKnob.value);
+		outputs[0].output = oscilator.update(freq);
 	}
 
 	std::optional<Vector2> getInputPosition(int index)
