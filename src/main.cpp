@@ -110,6 +110,7 @@ int main()
 	auto quant = audioRig.addQuantizer({-2,-4});
 	auto lowPass = audioRig.addLowPass({-4,-4});
 	auto reverb = audioRig.addReverb({-6,-4});
+	auto sequencer = audioRig.addSequencer({0,-4});
 	audioRig.addVolume({-1,-2});
 
 	Link link;

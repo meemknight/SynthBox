@@ -45,6 +45,8 @@ struct AudioRig
 
 	std::uint64_t addReverb(Vector2 position);
 
+	std::uint64_t addSequencer(Vector2 position);
+
 	void addLink(Link link);
 
 	void removeLinkFromOutputNode(std::uint64_t id, int position);

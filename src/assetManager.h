@@ -18,6 +18,9 @@ struct AssetManager
 	Texture buttonOff;
 	Texture lowPass;
 	Texture reverb;
+	Texture sequencer;
+	Texture slider;
+	Texture sliderOn;
 
 	void loadAll();
 

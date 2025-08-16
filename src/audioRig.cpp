@@ -8,6 +8,7 @@
 #include <components/quantizer.h>
 #include <components/lowPass.h>
 #include <components/reverb.h>
+#include <components/sequencer.h>
 
 void AudioRig::init()
 {
@@ -82,6 +83,14 @@ std::uint64_t AudioRig::addReverb(Vector2 position)
 	Reverb component;
 	component.position = position;
 	components[idCounter] = std::make_unique<Reverb>(component);
+	return idCounter++;
+}
+
+std::uint64_t AudioRig::addSequencer(Vector2 position)
+{
+	Sequencer component;
+	component.position = position;
+	components[idCounter] = std::make_unique<Sequencer>(component);
 	return idCounter++;
 }
 
