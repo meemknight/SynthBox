@@ -81,7 +81,7 @@ struct Lfo: public Component
 	{
 		float freq = getFrequency();
 
-		outputs[0].output = oscilator.update(freq);
+		outputs[0].output = linearRemap(oscilator.update(freq), -1, 1, minKnob.value, maxKnob.value);
 	}
 
 	std::optional<Vector2> getInputPosition(int index)

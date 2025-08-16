@@ -96,7 +96,12 @@ struct Quantizer: public Component
 		outputs[0].output = 0;
 
 		float frequency = 0;
-		frequency = noteKnob.linearRemapWithBias(inputs[0].input, 0, 0.999);
+		//frequency = noteKnob.linearRemapWithBias(inputs[0].input, 0, 0.999);
+		frequency = clampMunus11(inputs[0].input);
+		frequency += noteKnob.value;
+		frequency = clampMunus11(frequency);
+		frequency += 1; frequency /= 2.f;
+		frequency *= 0.999;
 
 		int notesCount = 0;
 		float cvNote[NOTES_COUNT] = {};

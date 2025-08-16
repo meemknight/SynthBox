@@ -7,6 +7,7 @@
 
 // Helper clamp
 static inline float clamp01(float x) { return x < 0.f ? 0.f : (x > 1.f ? 1.f : x); }
+static inline float clampMunus11(float x) { return x < -1.f ? -1.f : (x > 1.f ? 1.f : x); }
 
 // If you have your own remap, pass it in; signature must match.
 // float Remap(float x, float inMin, float inMax, float outMin, float outMax)
