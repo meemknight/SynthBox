@@ -107,6 +107,7 @@ int main()
 	auto lfo2 = audioRig.addLfo({-6,-2});
 	auto plus = audioRig.addPlus({-1,0});
 	auto split = audioRig.addSplitter({0,0});
+	auto quant = audioRig.addQuantizer({-2,-4});
 	audioRig.addVolume({-1,-2});
 
 	Link link;

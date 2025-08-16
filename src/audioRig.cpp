@@ -5,6 +5,7 @@
 #include <components/lfo.h>
 #include <components/volume.h>
 #include <components/splitter.h>
+#include <components/quantizer.h>
 
 void AudioRig::init()
 {
@@ -55,6 +56,14 @@ std::uint64_t AudioRig::addSplitter(Vector2 position)
 	Splitter component;
 	component.position = position;
 	components[idCounter] = std::make_unique<Splitter>(component);
+	return idCounter++;
+}
+
+std::uint64_t AudioRig::addQuantizer(Vector2 position)
+{
+	Quantizer component;
+	component.position = position;
+	components[idCounter] = std::make_unique<Quantizer>(component);
 	return idCounter++;
 }
 

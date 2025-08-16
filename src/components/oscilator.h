@@ -70,6 +70,13 @@ struct Oscilator: public Component
 		return freq;
 	}
 
+	static constexpr float freqToCV(float f)
+	{
+		float t = (f - lowestNote) / (highestNote - lowestNote);      // 0..1
+		float cv = t * 2.0f - 1.0f;             // -> -1..1
+		return std::clamp(cv, -1.0f, 1.0f);
+	}
+
 	void audioUpdate()
 	{
 		float freq = getFrequency();

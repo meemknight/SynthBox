@@ -13,6 +13,9 @@ struct AssetManager
 	Texture lfo;
 	Texture volume;
 	Texture splitter;
+	Texture quantizer;
+	Texture buttonOn;
+	Texture buttonOff;
 
 	void loadAll();
 
