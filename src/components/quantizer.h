@@ -5,8 +5,9 @@
 #include <knob.h>
 #include <button.h>
 #include <components/oscilator.h>
+#include <cmath>
 
-//INPUT 0 CV     1 PULS    -> OUTPUT 0
+//INPUT 0 CV NOTE     -> OUTPUT 0
 
 struct Quantizer: public Component
 {
@@ -17,8 +18,7 @@ struct Quantizer: public Component
 		return Vector2{2,2};
 	}
 
-	Knob freqKnob{Vector2{1.14,0.33}, 0.34};
-	Knob speedKnob{Vector2{1.14,0.73}, 0.34};
+	Knob noteKnob{Vector2{1.14,0.33}, 0.34};
 
 	constexpr static int NOTES_COUNT = 15;
 	Button noteButtons[NOTES_COUNT] = 
@@ -69,8 +69,7 @@ struct Quantizer: public Component
 			{0,0, (float)assetManager.quantizer.width, (float)assetManager.quantizer.height},
 			{position.x,position.y,getSize().x, getSize().y}, {0,0}, 0, WHITE);
 
-		freqKnob.render(assetManager, position);
-		speedKnob.render(assetManager, position);
+		noteKnob.render(assetManager, position);
 
 		for (int i = 0; i < NOTES_COUNT; i++)
 		{
@@ -82,8 +81,7 @@ struct Quantizer: public Component
 	void uiUpdate(Vector2 mousePos)
 	{
 
-		freqKnob.update(mousePos, position);
-		speedKnob.update(mousePos, position);
+		noteKnob.update(mousePos, position);
 		
 		for (int i = 0; i < NOTES_COUNT; i++)
 		{
@@ -94,15 +92,27 @@ struct Quantizer: public Component
 
 	void audioUpdate()
 	{
+
 		outputs[0].output = 0;
+
+		float frequency = 0;
+		frequency = noteKnob.linearRemapWithBias(inputs[0].input, 0, 0.999);
+
+		int notesCount = 0;
+		float cvNote[NOTES_COUNT] = {};
 
 		for (int i = 0; i < NOTES_COUNT; i++)
 		{
 			if (noteButtons[i].on)
 			{
-				outputs[0].output = kNotesC4_to_D5[i].cv;
+				cvNote[notesCount] = kNotesC4_to_D5[i].cv;
+				notesCount++;
 			}
 		}
+
+		if (notesCount == 0) { outputs[0].output = 0; }
+
+		outputs[0].output = cvNote[(int)std::floor(frequency * notesCount)];
 
 	}
 
@@ -111,11 +121,6 @@ struct Quantizer: public Component
 		if (index == 0)
 		{
 			return Vector2{0.35, 0.31};
-		}
-
-		if (index == 1)
-		{
-			return Vector2{0.35, 0.73};
 		}
 
 		return {};
