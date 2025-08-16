@@ -16,6 +16,8 @@ void AssetManager::loadAll()
 
 	buttonOn = LoadTexture(RESOURCES_PATH "buttonOn.png");
 	buttonOff = LoadTexture(RESOURCES_PATH "buttonOff.png");
-
+	lowPass = LoadTexture(RESOURCES_PATH "lowPass.png");
+	reverb = LoadTexture(RESOURCES_PATH "reverb.png");
+	
 
 }

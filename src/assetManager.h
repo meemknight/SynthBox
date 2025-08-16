@@ -16,6 +16,8 @@ struct AssetManager
 	Texture quantizer;
 	Texture buttonOn;
 	Texture buttonOff;
+	Texture lowPass;
+	Texture reverb;
 
 	void loadAll();
 

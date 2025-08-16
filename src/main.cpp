@@ -108,6 +108,8 @@ int main()
 	auto plus = audioRig.addPlus({-1,0});
 	auto split = audioRig.addSplitter({0,0});
 	auto quant = audioRig.addQuantizer({-2,-4});
+	auto lowPass = audioRig.addLowPass({-4,-4});
+	auto reverb = audioRig.addReverb({-6,-4});
 	audioRig.addVolume({-1,-2});
 
 	Link link;
