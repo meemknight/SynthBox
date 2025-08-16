@@ -113,18 +113,6 @@ int main()
 	auto sequencer = audioRig.addSequencer({0,-4});
 	audioRig.addVolume({-1,-2});
 
-	Link link;
-	link.fromComponent = oscilator;
-	link.fromOutputNumber = 0;
-	link.toComponent = plus;
-	link.toInputNumber  = 0;
-	audioRig.links.push_back(link);
-
-	link.fromComponent = plus;
-	link.fromOutputNumber = 0;
-	link.toComponent = audioRig.SPEAKER_ID;
-	link.toInputNumber = 0;
-	audioRig.links.push_back(link);
 
 
 
